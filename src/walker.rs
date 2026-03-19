@@ -1,3 +1,5 @@
+use std::fs::File;
+use std::io::Read;
 use std::path::PathBuf;
 use std::sync::mpsc;
 
@@ -40,14 +42,16 @@ pub fn walk_and_check(paths: &[PathBuf]) -> Result<Vec<FileResult>, SakokuError>
 
     walker.run(|| {
         let tx = tx.clone();
+        let mut buf = Vec::new();
         Box::new(move |entry_result| {
             let Ok(entry) = entry_result else {
                 return WalkState::Continue;
             };
             if entry.file_type().is_some_and(|ft| ft.is_file()) {
-                match std::fs::read(entry.path()) {
-                    Ok(content) => {
-                        let violations = check_bytes(&content);
+                buf.clear();
+                match File::open(entry.path()).and_then(|mut f| f.read_to_end(&mut buf)) {
+                    Ok(_) => {
+                        let violations = check_bytes(&buf);
                         if !violations.is_empty() {
                             let _ = tx.send(FileResult {
                                 path: entry.path().to_path_buf(),
