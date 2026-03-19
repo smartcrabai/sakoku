@@ -90,6 +90,21 @@ fn ignore_next_line_suppresses_line2_not_line3() -> Result<(), Box<dyn std::erro
 }
 
 #[test]
+fn allowed_unicode_file_exits_zero() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(bin())
+        .arg("tests/fixtures/allowed_unicode.txt")
+        .output()?;
+    assert!(
+        output.status.success(),
+        "expected exit 0 for allowed unicode, got: {:?}\nstdout: {}",
+        output.status,
+        String::from_utf8_lossy(&output.stdout)
+    );
+    assert!(output.stdout.is_empty(), "expected no output");
+    Ok(())
+}
+
+#[test]
 fn stdin_ignore_next_line() -> Result<(), Box<dyn std::error::Error>> {
     let mut child = Command::new(bin())
         .arg("--stdin")
