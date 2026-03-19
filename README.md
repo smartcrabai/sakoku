@@ -42,6 +42,18 @@ cat main.rs | sakoku --stdin
 
 Place a `.sakokuignore` file in any directory to exclude paths from scanning, using the same syntax as `.gitignore`. `.gitignore` files are also respected automatically. Hidden files (dotfiles) are skipped by default.
 
+### Inline suppression
+
+Add a `sakoku-ignore-next-line` marker anywhere on a line to suppress violations on the **next line** only:
+
+```rust
+// sakoku-ignore-next-line
+let label = "エラー"; // non-ASCII allowed on this line only
+let other = "問題";   // still flagged
+```
+
+The marker is detected as a plain string — it does not need to be inside a comment. The marker line itself is not suppressed; only the immediately following line is.
+
 ## Output format
 
 Violations are printed in GCC/Clang-compatible format:

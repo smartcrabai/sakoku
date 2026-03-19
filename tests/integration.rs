@@ -70,3 +70,49 @@ fn no_args_exits_two() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(output.status.code(), Some(2), "expected exit 2");
     Ok(())
 }
+
+#[test]
+fn ignore_next_line_suppresses_line2_not_line3() -> Result<(), Box<dyn std::error::Error>> {
+    let output = Command::new(bin())
+        .arg("tests/fixtures/ignored.txt")
+        .output()?;
+    assert_eq!(output.status.code(), Some(1), "expected exit 1");
+    let stdout = String::from_utf8(output.stdout)?;
+    assert!(
+        !stdout.contains("ignored.txt:2:"),
+        "line 2 should be suppressed: {stdout}"
+    );
+    assert!(
+        stdout.contains("ignored.txt:3:"),
+        "line 3 should be reported: {stdout}"
+    );
+    Ok(())
+}
+
+#[test]
+fn stdin_ignore_next_line() -> Result<(), Box<dyn std::error::Error>> {
+    let mut child = Command::new(bin())
+        .arg("--stdin")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()?;
+    if let Some(mut stdin) = child.stdin.take() {
+        // line 1: marker, line 2: suppressed (あ), line 3: reported (い)
+        stdin.write_all(
+            "sakoku-ignore-next-line\nlet x = \"\u{3042}\";\nlet y = \"\u{3044}\";\n".as_bytes(),
+        )?;
+    }
+    let output = child.wait_with_output()?;
+    assert_eq!(output.status.code(), Some(1), "expected exit 1");
+    let stdout = String::from_utf8(output.stdout)?;
+    assert!(
+        !stdout.contains("<stdin>:2:"),
+        "line 2 should be suppressed: {stdout}"
+    );
+    assert!(
+        stdout.contains("<stdin>:3:"),
+        "line 3 should be reported: {stdout}"
+    );
+    Ok(())
+}

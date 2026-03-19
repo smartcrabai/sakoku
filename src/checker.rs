@@ -1,3 +1,20 @@
+const IGNORE_MARKER: &[u8] = b"sakoku-ignore-next-line";
+
+fn find_suppressed_lines(content: &[u8]) -> Vec<usize> {
+    let mut suppressed = Vec::new();
+    let mut line_num: usize = 1;
+    for line in content.split(|&b| b == b'\n') {
+        if line
+            .windows(IGNORE_MARKER.len())
+            .any(|w| w == IGNORE_MARKER)
+        {
+            suppressed.push(line_num + 1);
+        }
+        line_num += 1;
+    }
+    suppressed
+}
+
 /// A single non-ASCII byte found in the content.
 #[derive(Debug, Clone)]
 pub struct Violation {
@@ -44,8 +61,11 @@ fn try_decode_char(bytes: &[u8]) -> Option<char> {
 ///
 /// Multi-byte UTF-8 characters are reported as a single violation at the lead byte,
 /// and the column counter advances by the full character width.
+///
+/// Lines preceded by a `sakoku-ignore-next-line` marker are excluded from results.
 #[must_use]
 pub fn check_bytes(content: &[u8]) -> Vec<Violation> {
+    let suppressed = find_suppressed_lines(content);
     let mut violations = Vec::new();
     let mut line: usize = 1;
     let mut col: usize = 1;
@@ -64,12 +84,14 @@ pub fn check_bytes(content: &[u8]) -> Vec<Violation> {
         } else {
             let char_display = try_decode_char(&content[i..]);
             let advance = char_display.map_or(1, char::len_utf8);
-            violations.push(Violation {
-                line,
-                column: col,
-                byte,
-                char_display,
-            });
+            if !suppressed.contains(&line) {
+                violations.push(Violation {
+                    line,
+                    column: col,
+                    byte,
+                    char_display,
+                });
+            }
             col += advance;
             i += advance;
         }
