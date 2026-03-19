@@ -1,4 +1,4 @@
-use std::io::{self, Read};
+use std::io::{self, BufWriter, Read, Write};
 use std::path::Path;
 use std::process::ExitCode;
 
@@ -12,6 +12,9 @@ use sakoku::walker::walk_and_check;
 fn main() -> ExitCode {
     let cli = Cli::parse();
 
+    let stdout = io::stdout().lock();
+    let mut out = BufWriter::new(stdout);
+
     if cli.stdin {
         let mut input = Vec::new();
         if let Err(e) = io::stdin().read_to_end(&mut input) {
@@ -20,7 +23,7 @@ fn main() -> ExitCode {
         }
         let violations = check_bytes(&input);
         for v in &violations {
-            println!("{}", format_violation(Path::new("<stdin>"), v));
+            let _ = writeln!(out, "{}", format_violation(Path::new("<stdin>"), v));
         }
         return if violations.is_empty() {
             ExitCode::SUCCESS
@@ -39,15 +42,14 @@ fn main() -> ExitCode {
             eprintln!("sakoku: {e}");
             ExitCode::from(2)
         }
-        Ok(results) => {
-            let mut sorted = results;
-            sorted.sort_by(|a, b| a.path.cmp(&b.path));
-            for result in &sorted {
+        Ok(mut results) => {
+            results.sort_unstable_by(|a, b| a.path.cmp(&b.path));
+            for result in &results {
                 for v in &result.violations {
-                    println!("{}", format_violation(&result.path, v));
+                    let _ = writeln!(out, "{}", format_violation(&result.path, v));
                 }
             }
-            if sorted.is_empty() {
+            if results.is_empty() {
                 ExitCode::SUCCESS
             } else {
                 ExitCode::from(1)
