@@ -15,6 +15,9 @@ codegen-units = 1
 lto = true
 strip = true
 
+[profile.dist]
+inherits = "release"
+
 [lints.clippy]
 allow_attributes = "deny"
 dbg_macro = "deny"
