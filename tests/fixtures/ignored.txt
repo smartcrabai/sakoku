@@ -1,0 +1,3 @@
+// sakoku-ignore-next-line
+let x = "あ";
+let y = "い";
