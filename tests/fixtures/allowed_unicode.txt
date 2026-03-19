@@ -1,0 +1,11 @@
+Box drawing example:
+┌─────────────┐
+│ status: ok  │
+├─────────────┤
+│ result ✓    │
+└─────────────┘
+
+Arrows and math: result → 42, count ≥ 0, diff ≠ 0
+Temperature: 100°C, size ±5%, scale ×2
+Dashes: range 1–10, note — see below
+Ellipsis: loading…

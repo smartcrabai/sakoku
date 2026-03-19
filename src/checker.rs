@@ -36,6 +36,44 @@ pub const fn is_allowed(byte: u8) -> bool {
     matches!(byte, 0x09 | 0x0A | 0x0D | 0x20..=0x7E)
 }
 
+/// Returns `true` if the Unicode character is on the allowlist of common symbols.
+///
+/// These characters are widely used in documentation, diagrams, and code comments
+/// and are exempt from the non-ASCII lint check.
+#[must_use]
+pub const fn is_allowed_unicode(c: char) -> bool {
+    matches!(
+        c,
+        '\u{00B0}' // ° DEGREE SIGN
+        | '\u{00B1}' // ± PLUS-MINUS SIGN
+        | '\u{00D7}' // × MULTIPLICATION SIGN
+        | '\u{2013}' // – EN DASH
+        | '\u{2014}' // — EM DASH
+        | '\u{2022}' // • BULLET
+        | '\u{2026}' // … HORIZONTAL ELLIPSIS
+        | '\u{2190}' // ← LEFTWARDS ARROW
+        | '\u{2191}' // ↑ UPWARDS ARROW
+        | '\u{2192}' // → RIGHTWARDS ARROW
+        | '\u{2193}' // ↓ DOWNWARDS ARROW
+        | '\u{2260}' // ≠ NOT EQUAL TO
+        | '\u{2264}' // ≤ LESS-THAN OR EQUAL TO
+        | '\u{2265}' // ≥ GREATER-THAN OR EQUAL TO
+        | '\u{2500}' // ─ BOX DRAWINGS LIGHT HORIZONTAL
+        | '\u{2502}' // │ BOX DRAWINGS LIGHT VERTICAL
+        | '\u{250C}' // ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT
+        | '\u{2510}' // ┐ BOX DRAWINGS LIGHT DOWN AND LEFT
+        | '\u{2514}' // └ BOX DRAWINGS LIGHT UP AND RIGHT
+        | '\u{2518}' // ┘ BOX DRAWINGS LIGHT UP AND LEFT
+        | '\u{251C}' // ├ BOX DRAWINGS LIGHT VERTICAL AND RIGHT
+        | '\u{2524}' // ┤ BOX DRAWINGS LIGHT VERTICAL AND LEFT
+        | '\u{252C}' // ┬ BOX DRAWINGS LIGHT DOWN AND HORIZONTAL
+        | '\u{2534}' // ┴ BOX DRAWINGS LIGHT UP AND HORIZONTAL
+        | '\u{253C}' // ┼ BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
+        | '\u{2713}' // ✓ CHECK MARK
+        | '\u{2717}' // ✗ BALLOT X
+    )
+}
+
 /// Tries to decode one non-ASCII UTF-8 character starting at `bytes[0]`.
 ///
 /// Returns `None` for continuation bytes, truncated sequences, or invalid encodings.
@@ -84,6 +122,11 @@ pub fn check_bytes(content: &[u8]) -> Vec<Violation> {
         } else {
             let char_display = try_decode_char(&content[i..]);
             let advance = char_display.map_or(1, char::len_utf8);
+            if char_display.is_some_and(is_allowed_unicode) {
+                col += advance;
+                i += advance;
+                continue;
+            }
             if !suppressed.contains(&line) {
                 violations.push(Violation {
                     line,
@@ -158,6 +201,26 @@ mod tests {
         assert_eq!(violations.len(), 1);
         assert_eq!(violations[0].line, 2);
         assert_eq!(violations[0].column, 1);
+        assert_eq!(violations[0].char_display, Some('あ'));
+    }
+
+    #[test]
+    fn allowed_unicode_not_reported() {
+        // All characters on the allowlist should produce no violations
+        let allowed = "°±×–—•…←↑→↓≠≤≥─│┌┐└┘├┤┬┴┼✓✗";
+        let violations = check_bytes(allowed.as_bytes());
+        assert!(
+            violations.is_empty(),
+            "unexpected violations for allowed unicode: {violations:?}"
+        );
+    }
+
+    #[test]
+    fn allowed_unicode_mixed_with_disallowed() {
+        // → (allowed) and あ (disallowed) on the same line
+        let content = "result → \u{3042}".as_bytes();
+        let violations = check_bytes(content);
+        assert_eq!(violations.len(), 1);
         assert_eq!(violations[0].char_display, Some('あ'));
     }
 }
