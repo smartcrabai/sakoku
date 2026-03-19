@@ -1,8 +1,10 @@
 [package]
-name = "sakoku"
-version = "0.1.1"
+description = "A fast CLI tool to detect non-ASCII bytes in source files"
 edition = "2024"
+license = "Apache-2.0"
+name = "sakoku"
 repository = "https://github.com/smartcrabai/sakoku"
+version = "0.1.1"
 
 [dependencies]
 clap = { version = "4", features = ["derive"] }
@@ -14,17 +16,23 @@ lto = true
 strip = true
 
 [lints.clippy]
-pedantic = { level = "warn", priority = -1 }
-unwrap_used = "deny"
-expect_used = "deny"
 allow_attributes = "deny"
 dbg_macro = "deny"
+expect_used = "deny"
+pedantic = { level = "warn", priority = -1 }
+unwrap_used = "deny"
 
 [workspace.metadata.dist]
 cargo-dist-version = "0.31.0"
 ci = "github"
-installers = ["shell", "homebrew"]
-targets = ["aarch64-apple-darwin", "x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu", "x86_64-pc-windows-msvc", "aarch64-pc-windows-msvc"]
-publish-jobs = ["homebrew"]
 install-path = "CARGO_HOME"
+installers = ["shell", "homebrew"]
+publish-jobs = ["homebrew"]
 tap = "takumi3488/homebrew-tap"
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+]
