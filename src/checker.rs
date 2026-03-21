@@ -55,6 +55,12 @@ pub const fn is_allowed_unicode(c: char) -> bool {
         | '\u{2191}' // ↑ UPWARDS ARROW
         | '\u{2192}' // → RIGHTWARDS ARROW
         | '\u{2193}' // ↓ DOWNWARDS ARROW
+        | '\u{2194}' // ↔ LEFT RIGHT ARROW
+        | '\u{2195}' // ↕ UP DOWN ARROW
+        | '\u{2196}' // ↖ NORTH WEST ARROW
+        | '\u{2197}' // ↗ NORTH EAST ARROW
+        | '\u{2198}' // ↘ SOUTH EAST ARROW
+        | '\u{2199}' // ↙ SOUTH WEST ARROW
         | '\u{21BA}' // ↺ ANTICLOCKWISE OPEN CIRCLE ARROW
         | '\u{21BB}' // ↻ CLOCKWISE OPEN CIRCLE ARROW
         | '\u{23F8}' // ⏸ DOUBLE VERTICAL BAR
@@ -224,7 +230,7 @@ mod tests {
     #[test]
     fn allowed_unicode_not_reported() {
         // All characters on the allowlist should produce no violations
-        let allowed = "°±×–—•…←↑→↓↺↻⏸≠≤≥▶○●⚠─│┌┐└┘├┤┬┴┼✓✗⠇⠋⠏⠙⠦⠧⠴⠸⠹⠼";
+        let allowed = "°±×–—•…←↑→↓↔↕↖↗↘↙↺↻⏸≠≤≥▶○●⚠─│┌┐└┘├┤┬┴┼✓✗⠇⠋⠏⠙⠦⠧⠴⠸⠹⠼";
         let violations = check_bytes(allowed.as_bytes());
         assert!(
             violations.is_empty(),
