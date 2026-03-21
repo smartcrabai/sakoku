@@ -55,9 +55,16 @@ pub const fn is_allowed_unicode(c: char) -> bool {
         | '\u{2191}' // ↑ UPWARDS ARROW
         | '\u{2192}' // → RIGHTWARDS ARROW
         | '\u{2193}' // ↓ DOWNWARDS ARROW
+        | '\u{21BA}' // ↺ ANTICLOCKWISE OPEN CIRCLE ARROW
+        | '\u{21BB}' // ↻ CLOCKWISE OPEN CIRCLE ARROW
+        | '\u{23F8}' // ⏸ DOUBLE VERTICAL BAR
         | '\u{2260}' // ≠ NOT EQUAL TO
         | '\u{2264}' // ≤ LESS-THAN OR EQUAL TO
         | '\u{2265}' // ≥ GREATER-THAN OR EQUAL TO
+        | '\u{25B6}' // ▶ BLACK RIGHT-POINTING TRIANGLE
+        | '\u{25CB}' // ○ WHITE CIRCLE
+        | '\u{25CF}' // ● BLACK CIRCLE
+        | '\u{26A0}' // ⚠ WARNING SIGN
         | '\u{2500}' // ─ BOX DRAWINGS LIGHT HORIZONTAL
         | '\u{2502}' // │ BOX DRAWINGS LIGHT VERTICAL
         | '\u{250C}' // ┌ BOX DRAWINGS LIGHT DOWN AND RIGHT
@@ -71,6 +78,16 @@ pub const fn is_allowed_unicode(c: char) -> bool {
         | '\u{253C}' // ┼ BOX DRAWINGS LIGHT VERTICAL AND HORIZONTAL
         | '\u{2713}' // ✓ CHECK MARK
         | '\u{2717}' // ✗ BALLOT X
+        | '\u{2807}' // ⠇ BRAILLE PATTERN DOTS-123
+        | '\u{280B}' // ⠋ BRAILLE PATTERN DOTS-124
+        | '\u{280F}' // ⠏ BRAILLE PATTERN DOTS-1234
+        | '\u{2819}' // ⠙ BRAILLE PATTERN DOTS-145
+        | '\u{2826}' // ⠦ BRAILLE PATTERN DOTS-236
+        | '\u{2827}' // ⠧ BRAILLE PATTERN DOTS-1236
+        | '\u{2834}' // ⠴ BRAILLE PATTERN DOTS-356
+        | '\u{2838}' // ⠸ BRAILLE PATTERN DOTS-456
+        | '\u{2839}' // ⠹ BRAILLE PATTERN DOTS-1245
+        | '\u{283C}' // ⠼ BRAILLE PATTERN DOTS-3456
     )
 }
 
@@ -207,7 +224,7 @@ mod tests {
     #[test]
     fn allowed_unicode_not_reported() {
         // All characters on the allowlist should produce no violations
-        let allowed = "°±×–—•…←↑→↓≠≤≥─│┌┐└┘├┤┬┴┼✓✗";
+        let allowed = "°±×–—•…←↑→↓↺↻⏸≠≤≥▶○●⚠─│┌┐└┘├┤┬┴┼✓✗⠇⠋⠏⠙⠦⠧⠴⠸⠹⠼";
         let violations = check_bytes(allowed.as_bytes());
         assert!(
             violations.is_empty(),
