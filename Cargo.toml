@@ -6,6 +6,22 @@ name = "sakoku"
 repository = "https://github.com/smartcrabai/sakoku"
 version = "0.1.5"
 
+[workspace.metadata.dist]
+allow-dirty = ["ci"]
+cargo-dist-version = "0.31.0"
+ci = "github"
+install-path = "CARGO_HOME"
+installers = ["shell", "homebrew"]
+publish-jobs = ["homebrew"]
+tap = "takumi3488/homebrew-tap"
+targets = [
+  "aarch64-apple-darwin",
+  "x86_64-unknown-linux-gnu",
+  "aarch64-unknown-linux-gnu",
+  "x86_64-pc-windows-msvc",
+  "aarch64-pc-windows-msvc",
+]
+
 [dependencies]
 clap = { version = "4", features = ["derive"] }
 ignore = "0.4"
@@ -24,18 +40,3 @@ dbg_macro = "deny"
 expect_used = "deny"
 pedantic = { level = "warn", priority = -1 }
 unwrap_used = "deny"
-
-[workspace.metadata.dist]
-cargo-dist-version = "0.31.0"
-ci = "github"
-install-path = "CARGO_HOME"
-installers = ["shell", "homebrew"]
-publish-jobs = ["homebrew"]
-tap = "takumi3488/homebrew-tap"
-targets = [
-  "aarch64-apple-darwin",
-  "x86_64-unknown-linux-gnu",
-  "aarch64-unknown-linux-gnu",
-  "x86_64-pc-windows-msvc",
-  "aarch64-pc-windows-msvc",
-]
