@@ -4,13 +4,14 @@ use std::process::ExitCode;
 
 use clap::Parser;
 
-use sakoku::checker::check_bytes;
+use sakoku::checker::{CheckOptions, check_bytes};
 use sakoku::cli::Cli;
 use sakoku::report::format_violation;
 use sakoku::walker::walk_and_check;
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
+    let options = CheckOptions { strict: cli.strict };
 
     let stdout = io::stdout().lock();
     let mut out = BufWriter::new(stdout);
@@ -21,7 +22,7 @@ fn main() -> ExitCode {
             eprintln!("sakoku: error reading stdin: {e}");
             return ExitCode::from(2);
         }
-        let violations = check_bytes(&input);
+        let violations = check_bytes(&input, options);
         for v in &violations {
             let _ = writeln!(out, "{}", format_violation(Path::new("<stdin>"), v));
         }
@@ -37,7 +38,7 @@ fn main() -> ExitCode {
         return ExitCode::from(2);
     }
 
-    match walk_and_check(&cli.paths) {
+    match walk_and_check(&cli.paths, options) {
         Err(e) => {
             eprintln!("sakoku: {e}");
             ExitCode::from(2)

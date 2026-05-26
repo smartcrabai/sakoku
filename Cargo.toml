@@ -4,7 +4,7 @@ edition = "2024"
 license = "Apache-2.0"
 name = "sakoku"
 repository = "https://github.com/smartcrabai/sakoku"
-version = "0.1.5"
+version = "0.2.0"
 
 [workspace.metadata.dist]
 allow-dirty = ["ci"]

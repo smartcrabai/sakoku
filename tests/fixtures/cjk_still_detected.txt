@@ -1,0 +1,3 @@
+// CJK and full-width characters must still be flagged at the default level.
+let label = "エラー";
+let value = "Ａ"; // full-width A

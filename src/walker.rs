@@ -5,7 +5,7 @@ use std::sync::mpsc;
 
 use ignore::{WalkBuilder, WalkState};
 
-use crate::checker::{Violation, check_bytes};
+use crate::checker::{CheckOptions, Violation, check_bytes};
 use crate::error::SakokuError;
 
 /// The result of checking a single file - always contains at least one violation.
@@ -24,7 +24,10 @@ pub struct FileResult {
 ///
 /// Returns `Err` if an error occurs before the walk begins (currently unused; reserved for
 /// future path-validation logic).
-pub fn walk_and_check(paths: &[PathBuf]) -> Result<Vec<FileResult>, SakokuError> {
+pub fn walk_and_check(
+    paths: &[PathBuf],
+    options: CheckOptions,
+) -> Result<Vec<FileResult>, SakokuError> {
     let (tx, rx) = mpsc::channel::<FileResult>();
 
     let Some((first, rest)) = paths.split_first() else {
@@ -51,7 +54,7 @@ pub fn walk_and_check(paths: &[PathBuf]) -> Result<Vec<FileResult>, SakokuError>
                 buf.clear();
                 match File::open(entry.path()).and_then(|mut f| f.read_to_end(&mut buf)) {
                     Ok(_) => {
-                        let violations = check_bytes(&buf);
+                        let violations = check_bytes(&buf, options);
                         if !violations.is_empty() {
                             let _ = tx.send(FileResult {
                                 path: entry.path().to_path_buf(),

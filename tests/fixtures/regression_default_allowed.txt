@@ -1,0 +1,14 @@
+Regression pin: characters that tripped sakoku in @seher-ts/sdk before the
+default allowlist was introduced. All of these must be silently allowed at
+the default level (no --strict).
+
+Prompt arrow      : ❯ (U+276F)
+Almost equal      : a ≈ b (U+2248)
+Em dash           : range — note (U+2014)
+Ellipsis          : loading… (U+2026)
+Less-than-or-eq   : count ≤ 10 (U+2264)
+Right arrow       : a → b (U+2192)
+Accented Latin    : chōonpu naïve café Zürich São (U+014D, U+00EF, U+00E9, U+00FC, U+00E3)
+ZWJ family emoji  : 👨‍👩‍👧 (U+1F468 + ZWJ + U+1F469 + ZWJ + U+1F467)
+Heart with VS16   : ❤️ (U+2764 + U+FE0F)
+Flag (regional)   : 🇯🇵 (U+1F1EF + U+1F1F5)
