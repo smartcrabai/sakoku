@@ -2,15 +2,13 @@ const IGNORE_MARKER: &[u8] = b"sakoku-ignore-next-line";
 
 fn find_suppressed_lines(content: &[u8]) -> Vec<usize> {
     let mut suppressed = Vec::new();
-    let mut line_num: usize = 1;
-    for line in content.split(|&b| b == b'\n') {
+    for (line_num, line) in (1_usize..).zip(content.split(|&b| b == b'\n')) {
         if line
             .windows(IGNORE_MARKER.len())
             .any(|w| w == IGNORE_MARKER)
         {
             suppressed.push(line_num + 1);
         }
-        line_num += 1;
     }
     suppressed
 }
