@@ -66,13 +66,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: smartcrabai/sakoku@main
+      - uses: smartcrabai/sakoku@v0.2.4
 ```
 
 Pass inputs with `with:` to customize the check:
 
 ```yaml
-      - uses: smartcrabai/sakoku@main
+      - uses: smartcrabai/sakoku@v0.2.4
         with:
           paths: src
           strict: 'true'
@@ -86,7 +86,7 @@ Pass inputs with `with:` to customize the check:
 
 sakoku exits with code 1 when it detects non-ASCII bytes, which fails the job. The action supports Linux (x64/arm64), macOS (Apple Silicon / arm64), and Windows (x64/arm64) runners; macOS Intel (x64) is not supported.
 
-A tagged release that includes `action.yml` is not published yet, so use `@main` for now. Once a release ships with the action, you can pin to a tag instead, e.g. `smartcrabai/sakoku@v0.2.4`.
+Pin the action to a release tag as shown above (v0.2.4 is the first release that ships with the action), or use `smartcrabai/sakoku@main` to track the latest.
 
 ## Output format
 
