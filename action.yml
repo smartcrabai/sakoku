@@ -1,0 +1,132 @@
+name: 'sakoku'
+description: 'Detect suspicious non-ASCII bytes in source files with sakoku'
+branding:
+  icon: shield
+  color: gray-dark
+
+inputs:
+  paths:
+    description: 'Space-separated list of files or directories to check'
+    required: false
+    default: '.'
+  strict:
+    description: "Set to 'true' to disable the default allowlist (adds --strict)"
+    required: false
+    default: 'false'
+  version:
+    description: "Release tag of sakoku to install, e.g. 'v0.2.3'. Defaults to the latest release."
+    required: false
+    default: 'latest'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install sakoku
+      shell: bash
+      env:
+        SAKOKU_VERSION: ${{ inputs.version }}
+      run: |
+        set -euo pipefail
+
+        # Resolve the cargo-dist release target triple and archive format for
+        # this runner. macOS-X64 (Intel) is intentionally unsupported: sakoku
+        # does not publish an x86_64-apple-darwin release asset.
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64)
+            target="x86_64-unknown-linux-gnu"
+            archive_ext="tar.xz"
+            ;;
+          Linux-ARM64)
+            target="aarch64-unknown-linux-gnu"
+            archive_ext="tar.xz"
+            ;;
+          macOS-ARM64)
+            target="aarch64-apple-darwin"
+            archive_ext="tar.xz"
+            ;;
+          Windows-X64)
+            target="x86_64-pc-windows-msvc"
+            archive_ext="zip"
+            ;;
+          Windows-ARM64)
+            target="aarch64-pc-windows-msvc"
+            archive_ext="zip"
+            ;;
+          *)
+            echo "::error::Unsupported platform for sakoku: RUNNER_OS=${RUNNER_OS} RUNNER_ARCH=${RUNNER_ARCH}. sakoku publishes releases for Linux (x64/arm64), macOS (arm64 only, no Intel), and Windows (x64/arm64)." >&2
+            exit 1
+            ;;
+        esac
+
+        asset="sakoku-${target}.${archive_ext}"
+
+        if [ "${SAKOKU_VERSION}" = "latest" ]; then
+          base_url="https://github.com/smartcrabai/sakoku/releases/latest/download"
+        else
+          base_url="https://github.com/smartcrabai/sakoku/releases/download/${SAKOKU_VERSION}"
+        fi
+
+        work_dir="${RUNNER_TEMP}/sakoku-install"
+        mkdir -p "${work_dir}"
+        cd "${work_dir}"
+
+        echo "Downloading ${asset} (version: ${SAKOKU_VERSION}) from ${base_url}"
+        curl --fail --location --silent --show-error --output "${asset}" "${base_url}/${asset}"
+        curl --fail --location --silent --show-error --output "${asset}.sha256" "${base_url}/${asset}.sha256"
+
+        echo "Verifying checksum"
+        if [ "${RUNNER_OS}" = "macOS" ]; then
+          shasum -a 256 -c "${asset}.sha256"
+        else
+          sha256sum -c "${asset}.sha256"
+        fi
+
+        extract_dir="${work_dir}/extracted"
+        mkdir -p "${extract_dir}"
+
+        # tar.xz assets contain a top-level "sakoku-<target>/" directory, but
+        # zip assets (Windows) do not. Extract, then locate the binary with
+        # find so both layouts work without hardcoding the archive structure.
+        if [ "${archive_ext}" = "tar.xz" ]; then
+          tar -xJf "${asset}" -C "${extract_dir}"
+        else
+          python3 -m zipfile -e "${asset}" "${extract_dir}"
+        fi
+
+        binary_name="sakoku"
+        if [ "${RUNNER_OS}" = "Windows" ]; then
+          binary_name="sakoku.exe"
+        fi
+
+        binary_path="$(find "${extract_dir}" -type f -name "${binary_name}" | head -n 1)"
+        if [ -z "${binary_path}" ]; then
+          echo "::error::Could not find ${binary_name} in the downloaded sakoku archive" >&2
+          exit 1
+        fi
+
+        bin_dir="${RUNNER_TEMP}/sakoku-bin"
+        mkdir -p "${bin_dir}"
+        cp "${binary_path}" "${bin_dir}/${binary_name}"
+        chmod +x "${bin_dir}/${binary_name}"
+
+        echo "${bin_dir}" >> "${GITHUB_PATH}"
+
+    - name: Run sakoku
+      shell: bash
+      env:
+        SAKOKU_PATHS: ${{ inputs.paths }}
+        SAKOKU_STRICT: ${{ inputs.strict }}
+      run: |
+        set -euo pipefail
+
+        args=()
+        if [ "${SAKOKU_STRICT}" = "true" ]; then
+          args+=(--strict)
+        fi
+
+        # Intentional word splitting: SAKOKU_PATHS is a space-separated list
+        # of multiple paths.
+        # shellcheck disable=SC2206
+        args+=(${SAKOKU_PATHS})
+
+        sakoku "${args[@]}"
