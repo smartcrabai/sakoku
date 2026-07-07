@@ -54,6 +54,40 @@ let other = "問題";   // still flagged
 
 The marker is detected as a plain string — it does not need to be inside a comment. The marker line itself is not suppressed; only the immediately following line is.
 
+### GitHub Action
+
+Run sakoku in CI using the bundled composite action. It downloads a prebuilt binary from GitHub Releases and runs sakoku over the given paths, failing the job if non-ASCII bytes are found.
+
+```yaml
+name: sakoku
+on: [pull_request]
+jobs:
+  sakoku:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: smartcrabai/sakoku@main
+```
+
+Pass inputs with `with:` to customize the check:
+
+```yaml
+      - uses: smartcrabai/sakoku@main
+        with:
+          paths: src
+          strict: 'true'
+```
+
+| Input | Description | Default |
+|-------|-------------|---------|
+| `paths` | Space-separated files or directories to check. | `.` |
+| `strict` | Set to `true` to disable the default Unicode allowlist (runs with `--strict`). | `false` |
+| `version` | sakoku release tag to install (e.g. `v0.2.3`). | `latest` |
+
+sakoku exits with code 1 when it detects non-ASCII bytes, which fails the job. The action supports Linux (x64/arm64), macOS (Apple Silicon / arm64), and Windows (x64/arm64) runners; macOS Intel (x64) is not supported.
+
+A tagged release that includes `action.yml` is not published yet, so use `@main` for now. Once a release ships with the action, you can pin to a tag instead, e.g. `smartcrabai/sakoku@v0.2.4`.
+
 ## Output format
 
 Violations are printed in GCC/Clang-compatible format:

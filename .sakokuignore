@@ -1,2 +1,4 @@
 # Files with intentional non-ASCII characters (test data, doc examples)
 src/checker.rs
+tests/fixtures/
+README.md
