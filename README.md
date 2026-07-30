@@ -7,7 +7,7 @@ A fast CLI tool to detect non-ASCII bytes in source files.
 ### Homebrew (macOS / Linux)
 
 ```sh
-brew install takumi3488/homebrew-tap/sakoku
+brew install smartcrabai/homebrew-tap/sakoku
 ```
 
 ### Shell installer (cargo-dist)
