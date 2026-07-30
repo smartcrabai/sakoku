@@ -5,6 +5,28 @@ use clap::Parser;
 const LONG_ABOUT: &str = "\
 Detect non-ASCII bytes in source files.
 
+Output format:
+  By default (0.3.0+), output is compact: one line per file. The line
+  number is shown only when every violation in that file sits on a single
+  line -- once violations span two or more lines, a caller (typically a
+  coding agent) ends up reading the whole file to fix it anyway, so the
+  line number is left out instead. For example:
+    path/to/file.md:12 [cjk] (3)
+    path/to/other.md [cjk,fullwidth] (287)
+  Use --format gcc to get the pre-0.3 GCC/Clang-compatible format instead
+  (one line per violating character). If there are no violations, nothing
+  is printed.
+
+  Categories (see --only):
+    - cjk: CJK / Hangul text that needs translation
+    - fullwidth: full-width ASCII, ideographic space, NBSP -- mechanically
+      replaceable
+    - homoglyph: Cyrillic / Greek -- possible homoglyph attack, needs human
+      security review
+    - symbol: characters on the default allowlist (only reported under
+      --strict)
+    - other: everything else
+
 By default, a curated allowlist of common, low-risk Unicode characters is
 accepted silently. Use --strict (alias: --no-default-allowlist) to flag every
 non-ASCII byte instead -- this matches the 0.1.x behavior.
@@ -31,6 +53,52 @@ Deliberately NOT allowed at default (homoglyph / typo sources):
   CJK, Hangul, full-width ASCII, Cyrillic/Greek (except mu and pi),
   and U+00A0 NO-BREAK SPACE.";
 
+/// Output format for reporting violations.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, clap::ValueEnum)]
+pub enum OutputFormat {
+    /// Compact per-file digest, the default as of 0.3.0: one line per file,
+    /// e.g. `path/to/file.md:12 [cjk] (3)` when every violation sits on one
+    /// line, or `path/to/other.md [cjk,fullwidth] (287)` when they span more.
+    #[default]
+    Compact,
+    /// GCC/Clang-compatible, one line per violating character; the format
+    /// used by default before 0.3.0.
+    Gcc,
+}
+
+/// Character category used to filter reported violations via `--only`.
+///
+/// This mirrors `crate::category::Category` but is defined separately so
+/// that `clap::ValueEnum` (and its CLI-facing string conversions) do not
+/// leak into the classification module.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, clap::ValueEnum)]
+pub enum CategoryArg {
+    /// CJK / Hangul text that needs translation.
+    Cjk,
+    /// Full-width ASCII, ideographic space, NBSP -- mechanically
+    /// replaceable.
+    Fullwidth,
+    /// Cyrillic / Greek -- possible homoglyph attack, needs human security
+    /// review.
+    Homoglyph,
+    /// Characters on the default allowlist (only reported under --strict).
+    Symbol,
+    /// Everything else.
+    Other,
+}
+
+impl From<CategoryArg> for crate::category::Category {
+    fn from(value: CategoryArg) -> Self {
+        match value {
+            CategoryArg::Cjk => Self::Cjk,
+            CategoryArg::Fullwidth => Self::Fullwidth,
+            CategoryArg::Homoglyph => Self::Homoglyph,
+            CategoryArg::Symbol => Self::Symbol,
+            CategoryArg::Other => Self::Other,
+        }
+    }
+}
+
 /// Detect non-ASCII bytes in source files.
 #[derive(Debug, Parser)]
 #[command(name = "sakoku", version, about, long_about = LONG_ABOUT)]
@@ -47,4 +115,30 @@ pub struct Cli {
     /// When set, every non-ASCII byte is flagged -- matching the 0.1.x behavior.
     #[arg(long, visible_alias = "no-default-allowlist")]
     pub strict: bool,
+
+    /// Output format.
+    #[arg(long, value_enum, default_value_t = OutputFormat::Compact)]
+    pub format: OutputFormat,
+
+    /// Only report characters in these categories (comma-separated).
+    ///
+    /// When empty (the default), violations in every category are reported.
+    /// If this filter causes zero violations to remain, the run exits 0 --
+    /// that outcome means "no violations in the requested categories", not
+    /// an error.
+    ///
+    /// Repeat the flag or use a comma-separated list to select several
+    /// categories: `--only cjk,fullwidth` or `--only cjk --only fullwidth`.
+    /// Space-separated values are deliberately not accepted, because a
+    /// variadic option would swallow the trailing path arguments.
+    #[arg(long, value_enum, value_delimiter = ',')]
+    pub only: Vec<CategoryArg>,
+
+    /// Maximum number of files to list.
+    ///
+    /// Unlimited by default. When the limit is exceeded, the remaining
+    /// files are summarized as "... and K more files" instead of being
+    /// silently dropped from the output.
+    #[arg(long)]
+    pub max_files: Option<usize>,
 }
