@@ -13,6 +13,10 @@ inputs:
     description: "Set to 'true' to disable the default allowlist (adds --strict)"
     required: false
     default: 'false'
+  format:
+    description: 'Output format passed to --format (compact or gcc). Leave empty to use the tool default.'
+    required: false
+    default: ''
   version:
     description: "Release tag of sakoku to install, e.g. 'v0.2.3'. Defaults to the latest release."
     required: false
@@ -116,12 +120,16 @@ runs:
       env:
         SAKOKU_PATHS: ${{ inputs.paths }}
         SAKOKU_STRICT: ${{ inputs.strict }}
+        SAKOKU_FORMAT: ${{ inputs.format }}
       run: |
         set -euo pipefail
 
         args=()
         if [ "${SAKOKU_STRICT}" = "true" ]; then
           args+=(--strict)
+        fi
+        if [ -n "${SAKOKU_FORMAT}" ]; then
+          args+=(--format "${SAKOKU_FORMAT}")
         fi
 
         # Intentional word splitting: SAKOKU_PATHS is a space-separated list

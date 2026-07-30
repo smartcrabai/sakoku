@@ -1,0 +1,12 @@
+x1 = "あ";
+x2 = "い";
+x3 = "う";
+// clean line
+// clean line
+// clean line
+x7 = "え";
+// clean line
+x9 = "お";
+x10 = "か";
+x11 = "き";
+x12 = "く";

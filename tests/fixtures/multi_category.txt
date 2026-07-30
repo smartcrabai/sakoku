@@ -1,0 +1,4 @@
+// multi-category fixture
+let greeting = "日本語のテスト";
+let full = "ＡＢＣ１２３";　// full-width line
+let pwd = "pаssword";
