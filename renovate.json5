@@ -44,12 +44,10 @@
       minimumReleaseAge: "7 days"
     },
     {
-      // Digests / pinDigests have no releaseTimestamp. Applying
-      // minimumReleaseAge would make stabilityStatus=yellow unconditionally
-      // because the default minimumReleaseAgeBehaviour is timestamp-required,
-      // leaving renovate/stability-days permanently pending. A digest follows
-      // the same tag, so a release-age delay does not apply. Keep this rule last
-      // so it overrides the github-actions rule above.
+      // digest/pinDigest updates have no releaseTimestamp, so minimumReleaseAge
+      // (with the default minimumReleaseAgeBehaviour "timestamp-required") keeps
+      // renovate/stability-days pending forever. Must stay last to override the
+      // github-actions rule above.
       matchUpdateTypes: [
         "digest",
         "pinDigest"
