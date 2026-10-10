@@ -321,6 +321,11 @@ sakoku --no-default-allowlist src/
 | `1` | One or more violations found |
 | `2` | Error (I/O failure, no paths specified, etc.) |
 
+## Support
+
+If you find sakoku useful, consider [sponsoring smartcrabai](https://github.com/sponsors/smartcrabai)
+to support its development and maintenance.
+
 ## License
 
 Apache 2.0
